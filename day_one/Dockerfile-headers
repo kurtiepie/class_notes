@@ -1,0 +1,17 @@
+FROM golang:1.16-alpine as builder
+
+WORKDIR /app
+
+COPY *.go ./
+
+COPY go.mod ./
+
+RUN go build -o ./headers
+
+FROM alpine:3.10
+
+COPY --from=builder /app/headers /bin/headers
+
+ENV PORT 45678
+
+CMD ["/bin/headers"]
