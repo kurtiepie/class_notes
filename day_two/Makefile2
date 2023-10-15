@@ -1,0 +1,23 @@
+REG_URL := "192.168.64.12:30241"
+NAME := "myalpineimage"
+VERSION := "0.1"
+
+start-reg: ## Deploy docker registiry
+	@kubectl apply -f registry-deployment.yaml
+build: ## Docker Build
+	@docker build . -t $(REG_URL)/$(NAME):$(VERSION)
+
+push: ## Push to local registry
+	@docker push $(REG_URL)/$(NAME):$(VERSION)
+
+cve-scan:
+	@docker scout cves
+
+trivy-scan: ## SAST Scan for High and Critical CVEs
+	@trivy image --severity HIGH,CRITICAL $(REG_URL)/$(NAME):$(VERSION)
+
+test: ## Push to local registry
+	kubectl run -it  --rm --restart=Never $(REG_URL)/$(NAME):$(VERSION) -- /bin/sh -c "uptime"
+
+help:
+	          @grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

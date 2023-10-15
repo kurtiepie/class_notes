@@ -1,0 +1,4 @@
+# Get base image and assess its know vulnabilties
+trivy image --skip-db-update  -s CRITICAL,HIGH ubuntu/squid
+docker pull ubuntu/squid
+docker history  --no-trunc ubuntu/squid | less

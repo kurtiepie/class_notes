@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: my-pod
+  name: my-pod
+  namespace: default
+spec:
+  containers:
+  - command:
+    - touch
+    - /data/hi.txt
+    image: alpine
+    imagePullPolicy: Always
+    name: my-container
+    resources: {}
+    volumeMounts:
+    - mountPath: /data
+      name: my-volume
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-v52pm
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  volumes:
+  - hostPath:
+      path: /data
+      type: Directory
+    name: my-volume
+  - name: kube-api-access-v52pm
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  phase: Pending
+  qosClass: BestEffort

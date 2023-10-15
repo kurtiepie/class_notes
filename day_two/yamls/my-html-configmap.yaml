@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-html-configmap
+data:
+  my-html-file.html: |
+    <html><h1>Hello</h1></html>

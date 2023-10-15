@@ -1,0 +1,100 @@
+### Part One Intro
+# Start the kube
+minikube start --insecure-registry "10.0.0.0/24"
+
+k8s examples Pods
+kubectl create deployment nginx --image=nginx --port=80
+kubectl scale deployment/nginx --replicas=2
+kubectl expose deployment nginx --type=NodePort
+--- Configmaps
+`configmaps` are essential to running applications on kubernetes, since they provide the primary mechanism by which you manage an application’s configuration.
+
+kubectl apply -f yamls/my-html-configmap.yaml
+kubectl apply -f yamls/nginx-service.yaml
+kubectl apply -f yamls/deployment-nginx.yaml
+
+-- Basic Pods
+kubectl --restart=Never run --image=nginx web1 --port 80
+# get web2 pod network ip `kubectl get pods web1 -o wide
+kubectl run exec -it --restart=Never --rm --image=nginx -- /bin/sh -c "curl http://10.244.0.23:80"
+
+## Host Network Examples Network registry
+docker run -p 45678:80 -v$(pwd)/:/usr/share/nginx/html --rm -d --name nginxweb nginx
+
+## Host volume example nginx root dir Docker
+echo "hello there" > index.html
+docker run -p 45678:80 -v$(pwd)/:/usr/share/nginx/html --rm -d --name nginxweb nginx
+
+## Host volume nginx example root dir Kubernetes
+minikube ssh "sudo mkdir -p /webserver/{production,staging,dev}"
+minikube ssh "echo production | sudo tee  /webserver/production/index.html"
+minikube ssh "echo dev | sudo tee  /webserver/dev/index.html"
+
+# production server
+kubectl run prod-web --image=nginx --restart=Never --overrides='{"spec": {"containers": [{"name": "nginx", "image": "nginx", "volumeMounts": [{"name": "web-root-volume", "mountPath": "/usr/share/nginx/html"}]}], "volumes": [{"name": "web-root-volume", "hostPath": {"path": "/webserver/production/", "type": "Directory"}}]}}'
+kubectl get pods -o wide
+
+## Dev Server
+kubectl run prod-web --image=nginx --restart=Never --overrides='{"spec": {"containers": [{"name": "nginx", "image": "nginx", "volumeMounts": [{"name": "web-root-volume", "mountPath": "/usr/share/nginx/html"}]}], "volumes": [{"name": "web-root-volume", "hostPath": {"path": "/webserver/dev/", "type": "Directory"}}]}}'
+# Test pod 
+kubectl run exec -it --restart=Never --rm --image=nginx -- /bin/sh -c "curl http://10.244.0.30:80"
+# Ping it
+kubectl run -it --restart=Never --image=busybox ping -- /bin/sh -c 'ping 10.244.0.12'
+
+# Run a dpeloyment
+kubectl create deployment hello-minikube1 --image=kicbase/echo-server:1.0
+
+# Expose a deployment
+kubectl expose deployment hello-minikube1 --type=LoadBalancer --port=8080
+
+kubectl expose deployment hello-minikube1 --type=NodePort --port=8080
+
+minikube service hello-minikube1 --url
+
+### Run a deployment with a config map
+# Trifecta Deployment, Service, ConfigMap
+
+# wget to ephmeral file system
+kubectl run --rm -it --restart=Never --image=busybox ping -- /bin/sh -c 'wget http://10.244.0.12:80'
+
+# Wget from a host mount run
+
+# Check hostfile system 
+minikube ssh 'ls /mydata
+minikube ssh 'sudo mkdir -p /mydata/wget1' | grep data'
+
+# Run pod with volumemount
+kubectl run -it --rm kurtis-pod --image=alpine --restart=Never --overrides='{"spec": {"containers": [{"name": "my-container", "image": "alpine", "command": ["/bin/sh", "-c", "uptime"], "volumeMounts": [{"name": "my-volume", "mountPath": "/kurtisdata"}]}], "volumes": [{"name": "my-volume", "hostPath": {"path": "/kurtisdata", "type": "Directory"}}]}}'
+
+
+# Run a pod
+
+# Service Adds DNS endpoint to deployment.
+# DNS is manged by kube-proxy and is exposed as env variables in the same namespace
+
+kubectl run --rm -it --image=alpine ktest -- /bin/sh -c "env"
+
+# Curl minikube ip.
+kubectl expose deployment hello-minikube1 --type=NodePort --port=8080
+curl http://$(minikube ip):8080
+
+# Pull our custom image from internal registry
+
+Need to change the tage to minikube ip as that is the url of our registry
+# Ping Site
+
+## Part 2 minikube
+# Start minikube
+minikube start --insecure-registry "10.0.0.0/24"
+minikube addons enable registry
+minikube ssh "curl http://localhost:5000/v2/_catalog"
+
+# Expose local registry with portforward
+kubectl -n kube-system get svc
+kubectl -n kube-system port-forward svc/registry 5000:80
+
+curl http://localhost:5000/v2/_catalog
+
+
+# Volume mount nsenter
+docker run -it --privileged --pid=host debian nsenter -t 1 -m -u -n -i sh
